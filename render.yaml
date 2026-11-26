@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: veterinaria-api-s15
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: VeterinariaApi
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: veterinaria-s15-jwt
+      - key: ConnectionStrings__Veterinaria
+        fromDatabase:
+          name: veterinaria-db-s15
+          property: connectionString
+      - key: SeedAdmin__Email
+        sync: false
+      - key: SeedAdmin__Password
+        sync: false
+  - type: web
+    name: clientes-api-s15
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: ClientesApi
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: veterinaria-s15-jwt
+  - type: web
+    name: gateway-api-s15
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: GatewayApi
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: veterinaria-s15-jwt
+      - key: ServiceEndpoints__VeterinariaHost
+        fromService:
+          type: web
+          name: veterinaria-api-s15
+          property: hostport
+      - key: ServiceEndpoints__ClientesHost
+        fromService:
+          type: web
+          name: clientes-api-s15
+          property: hostport
+databases:
+  - name: veterinaria-db-s15
+    plan: free
+    region: oregon
+    databaseName: veterinaria_s15
+    user: veterinaria_user
+envVarGroups:
+  - name: veterinaria-s15-jwt
+    envVars:
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: VeterinariaMicroservicios
+      - key: Jwt__Audience
+        value: VeterinariaClientes
