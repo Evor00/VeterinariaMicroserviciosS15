@@ -39,6 +39,20 @@ app.Run();
 
 static void ApplyServiceEndpoint(IConfiguration configuration, string serviceName, params int[] routeIndexes)
 {
+    var url = configuration[$"ServiceEndpoints:{serviceName}Url"];
+    if (Uri.TryCreate(url, UriKind.Absolute, out var endpoint))
+    {
+        foreach (var index in routeIndexes)
+        {
+            configuration[$"Routes:{index}:DownstreamHostAndPorts:0:Host"] = endpoint.Host;
+            configuration[$"Routes:{index}:DownstreamHostAndPorts:0:Port"] = endpoint.IsDefaultPort
+                ? (endpoint.Scheme == Uri.UriSchemeHttps ? "443" : "80")
+                : endpoint.Port.ToString();
+            configuration[$"Routes:{index}:DownstreamScheme"] = endpoint.Scheme;
+        }
+        return;
+    }
+
     var value = configuration[$"ServiceEndpoints:{serviceName}Host"];
     if (string.IsNullOrWhiteSpace(value)) return;
     var split = value.LastIndexOf(':');

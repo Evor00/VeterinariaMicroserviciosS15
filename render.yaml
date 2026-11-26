@@ -37,16 +37,12 @@ services:
     healthCheckPath: /health
     envVars:
       - fromGroup: veterinaria-s15-jwt
-      - key: ServiceEndpoints__VeterinariaHost
-        fromService:
-          type: web
-          name: veterinaria-api-s15
-          property: hostport
-      - key: ServiceEndpoints__ClientesHost
-        fromService:
-          type: web
-          name: clientes-api-s15
-          property: hostport
+      # Free web services cannot receive private-network traffic. The gateway
+      # calls the two public HTTPS endpoints instead.
+      - key: ServiceEndpoints__VeterinariaUrl
+        value: https://veterinaria-api-s15-hjjy.onrender.com
+      - key: ServiceEndpoints__ClientesUrl
+        value: https://clientes-api-s15-hjjy.onrender.com
 databases:
   - name: veterinaria-db-s15
     plan: free
